@@ -21,30 +21,43 @@ const scene = new THREE.Scene();
  * Loaders
  */
 const gltfLoader = new GLTFLoader();
-
-let selectedModel = "";
+const modelNames = ["cassettiera", "divano", "frigorifero", "lavandino", "lavatrice", "piano", "tv"];
+const loadedModels: { [key: string]: THREE.Group } = {};
 let currentModel: THREE.Group | null = null;
-const loadModel = (model: string) => {
+
+modelNames.forEach((model) => {
+    gltfLoader.load("models/" + model + ".glb", (gltf) => {
+        const loadedModel = gltf.scene;
+        loadedModel.visible = false;
+        scene.add(loadedModel);
+        loadedModels[model] = loadedModel;
+
+        if (model === modelNames[0]) {
+            loadedModel.visible = true;
+            currentModel = loadedModel;
+        }
+    });
+});
+
+const showModel = (model: string) => {
     if (currentModel) {
-        scene.remove(currentModel);
-        currentModel = null;
+        currentModel.visible = false;
     }
 
-    gltfLoader.load("models/" + model + ".glb", (gltf) => {
-        currentModel = gltf.scene;
-        scene.add(currentModel);
-    });
+    const newModel = loadedModels[model];
+    if (newModel) {
+        newModel.visible = true;
+        currentModel = newModel;
+    }
 };
 
 $(() => {
     $('input[name="model"]').on("change", () => {
-        selectedModel = $('input[name="model"]:checked').val() as string;
+        const selectedModel = $('input[name="model"]:checked').val() as string;
 
-        loadModel(selectedModel);
+        showModel(selectedModel);
     });
 });
-
-loadModel("cassettiera");
 
 /**
  * Lights
